@@ -2,6 +2,7 @@ package com.example.bmw.coolweather.activity;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -48,6 +49,7 @@ public class ChooseAreaActivity extends Activity {
 
     private Province selectedProvince;
     private City selectedCity;
+    private County selectedCounty;
 
     private int currentLevel;
 
@@ -73,6 +75,13 @@ public class ChooseAreaActivity extends Activity {
                     //Toast.makeText(ChooseAreaActivity.this,"目前无法查询县城",Toast.LENGTH_SHORT).show();
                     selectedCity=cityList.get(position);
                     queryCounties();
+                }else if (currentLevel==LEVEL_COUNTY){
+                    selectedCounty=countyList.get(position);
+                    Intent intent=new Intent(ChooseAreaActivity.this,CityWeatherActivity.class);
+                    intent.putExtra("county_code",selectedCounty.getCountyCode());
+                    intent.putExtra("county_name",selectedCounty.getCountyName());
+                    startActivity(intent);
+                    finish();
                 }
             }
         });

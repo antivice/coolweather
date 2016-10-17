@@ -1,12 +1,19 @@
 package com.example.bmw.coolweather.util;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
+import com.example.bmw.coolweather.activity.CityWeatherActivity;
 import com.example.bmw.coolweather.db.CoolWeatherDB;
 import com.example.bmw.coolweather.model.City;
 import com.example.bmw.coolweather.model.County;
 import com.example.bmw.coolweather.model.Province;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
@@ -160,4 +167,54 @@ public class Utility {
         }
         return false;
     }
+
+    public synchronized static boolean handleWeatherResponse(Context context,String countyName,String response){
+        try {
+            if (!TextUtils.isEmpty(response)) {
+                JSONObject jsonObject=new JSONObject(response);
+                JSONArray jsonArray=jsonObject.getJSONArray("HeWeather data service 3.0");
+                JSONObject subJsonObject=jsonArray.getJSONObject(0);
+                String status=subJsonObject.getString("status");
+                if ("ok".equals(status)){
+                    //解析出当天天气
+                    JSONArray dailyForecastSubJsonArray=subJsonObject.getJSONArray("daily_forecast");
+
+                    //此处目前只解析第一天的天气预报，可使用 for (int i=0;i<dailyForecastSubJsonArray.length();i++)解析未来七天的天气预报
+                    JSONObject currentWeatherJsonObject=dailyForecastSubJsonArray.getJSONObject(0);
+                    String minTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("min");
+                    String maxTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("max");
+                    String condFirst=currentWeatherJsonObject.getJSONObject("cond").getString("txt_d");
+                    String condSecond=currentWeatherJsonObject.getJSONObject("cond").getString("txt_n");
+                    String date=currentWeatherJsonObject.getString("date");
+
+                    JSONObject basicJsonObject=subJsonObject.getJSONObject("basic");
+                    String publishText=basicJsonObject.getJSONObject("update").getString("loc");
+                    String weatherCond="";
+                    if (condFirst.equals(condSecond)){
+                        weatherCond=condFirst;
+                    }else {
+                        weatherCond=condFirst+"转"+condSecond;
+                    }
+
+                    saveWeatherInfo(context,countyName,publishText,date,weatherCond,minTmp,maxTmp);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static void saveWeatherInfo(Context context,String countyName,String publish,String currentDate,String weatherDesp,String minTmp,String maxTmp ){
+        SharedPreferences.Editor editor= PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean("city_selected",true);
+        editor.putString("city_name",countyName);
+        editor.putString("weather_desp",weatherDesp);
+        editor.putString("max_tmp",maxTmp);
+        editor.putString("min_tmp",minTmp);
+        editor.putString("publish",publish);
+        editor.putString("current_date",currentDate);
+        editor.commit();
+    }
+
 }
