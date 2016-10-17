@@ -168,7 +168,7 @@ public class Utility {
         return false;
     }
 
-    public synchronized static boolean handleWeatherResponse(Context context,String countyName,String response){
+    public synchronized static boolean handleWeatherResponse(Context context,String response){
         try {
             if (!TextUtils.isEmpty(response)) {
                 JSONObject jsonObject=new JSONObject(response);
@@ -196,7 +196,7 @@ public class Utility {
                         weatherCond=condFirst+"转"+condSecond;
                     }
 
-                    saveWeatherInfo(context,countyName,publishText,date,weatherCond,minTmp,maxTmp);
+                    saveWeatherInfo(context,publishText,date,weatherCond,minTmp,maxTmp);
                 }
             }
         }catch (Exception e){
@@ -205,10 +205,10 @@ public class Utility {
         return false;
     }
 
-    public static void saveWeatherInfo(Context context,String countyName,String publish,String currentDate,String weatherDesp,String minTmp,String maxTmp ){
+    public static void saveWeatherInfo(Context context,String publish,String currentDate,String weatherDesp,String minTmp,String maxTmp ){
         SharedPreferences.Editor editor= PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putBoolean("city_selected",true);
-        editor.putString("city_name",countyName);
+        //editor.putString("city_name",countyName);
         editor.putString("weather_desp",weatherDesp);
         editor.putString("max_tmp",maxTmp);
         editor.putString("min_tmp",minTmp);

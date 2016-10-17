@@ -30,7 +30,7 @@ import java.util.StringTokenizer;
  * Created by bmw on 2016/10/15.
  */
 
-public class ChooseAreaActivity extends Activity {
+public class ChooseAreaActivity extends Activity{
 
     public static final int LEVEL_PROVINCE=0;
     public static final int LEVEL_CITY=1;
@@ -53,11 +53,14 @@ public class ChooseAreaActivity extends Activity {
 
     private int currentLevel;
 
+    private boolean isFromCityWeather=false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.choose_area);
+        isFromCityWeather=getIntent().getBooleanExtra("from_city_weather",false);
 
         listView=(ListView)findViewById(R.id.list_view);
         titleText=(TextView)findViewById(R.id.title_text);
@@ -72,9 +75,18 @@ public class ChooseAreaActivity extends Activity {
                     selectedProvince=provinceList.get(position);
                     queryCities();
                 }else if (currentLevel==LEVEL_CITY){
-                    //Toast.makeText(ChooseAreaActivity.this,"目前无法查询县城",Toast.LENGTH_SHORT).show();
-                    selectedCity=cityList.get(position);
-                    queryCounties();
+                    if (isMunicipality()){
+                        selectedCity=cityList.get(position);
+                        //如果是直辖市，不进行第三级查找，直接查询天气
+                        Intent intent=new Intent(ChooseAreaActivity.this,CityWeatherActivity.class);
+                        intent.putExtra("county_code",selectedCity.getCityCode());
+                        intent.putExtra("county_name",selectedCity.getCityName());
+                        startActivity(intent);
+                        finish();
+                    }else {
+                        selectedCity=cityList.get(position);
+                        queryCounties();
+                    }
                 }else if (currentLevel==LEVEL_COUNTY){
                     selectedCounty=countyList.get(position);
                     Intent intent=new Intent(ChooseAreaActivity.this,CityWeatherActivity.class);
@@ -215,7 +227,20 @@ public class ChooseAreaActivity extends Activity {
         }else if (currentLevel==LEVEL_COUNTY){
             queryCities();
         }else{
+            if (isFromCityWeather){
+                Intent intent=new Intent(this,CityWeatherActivity.class);
+                startActivity(intent);
+            }
             finish();
         }
+    }
+
+    //判断选中省份是否为直辖市
+    private boolean isMunicipality(){
+        String name=selectedProvince.getProvinceName();
+        if ("北京".equals(name) || "上海".equals(name) || "天津".equals(name) ||"重庆".equals(name)|| "海南".equals(name)){
+            return true;
+        }
+        return false;
     }
 }
