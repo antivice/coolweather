@@ -2,6 +2,7 @@ package com.example.bmw.coolweather.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Message;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -205,6 +206,54 @@ public class Utility {
         return false;
     }
 
+    public synchronized static boolean handleCurrentLocationWeatherResponse(Context context,String response){
+        boolean bResult=false;
+        if(TextUtils.isEmpty(response)){
+            return false;
+        }
+        try {
+            JSONObject jsonObject=new JSONObject(response);
+            JSONArray jsonArray=jsonObject.getJSONArray("HeWeather data service 3.0");
+            JSONObject subJsonObject=jsonArray.getJSONObject(0);
+            String status=subJsonObject.getString("status");
+            if ("ok".equals(status)){
+                //解析出当天天气
+                JSONArray dailyForecastSubJsonArray=subJsonObject.getJSONArray("daily_forecast");
+
+                //此处目前只解析第一天的天气预报，可使用 for (int i=0;i<dailyForecastSubJsonArray.length();i++)解析未来七天的天气预报
+                JSONObject currentWeatherJsonObject=dailyForecastSubJsonArray.getJSONObject(0);
+                String minTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("min");
+                String maxTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("max");
+                String condFirst=currentWeatherJsonObject.getJSONObject("cond").getString("txt_d");
+                String condSecond=currentWeatherJsonObject.getJSONObject("cond").getString("txt_n");
+                String date=currentWeatherJsonObject.getString("date");
+
+                JSONObject basicJsonObject=subJsonObject.getJSONObject("basic");
+                String publishText=basicJsonObject.getJSONObject("update").getString("loc");
+                String weatherCond="";
+                if (condFirst.equals(condSecond)){
+                    weatherCond=condFirst;
+                }else {
+                    weatherCond=condFirst+"转"+condSecond;
+                }
+
+                bResult=true;
+                //saveWeatherInfo(context,publishText,date,weatherCond,minTmp,maxTmp);
+                SharedPreferences.Editor editor= PreferenceManager.getDefaultSharedPreferences(context).edit();
+                editor.putBoolean("get_crrent_city_weather",true);
+                editor.putString("current_city_weather_desp",weatherCond);
+                editor.putString("current_city_max_tmp",maxTmp);
+                editor.putString("current_city_min_tmp",minTmp);
+                editor.putString("current_city_publish",publishText);
+                editor.putString("current_city_date",date);
+                editor.commit();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return bResult;
+    }
+
     public static void saveWeatherInfo(Context context,String publish,String currentDate,String weatherDesp,String minTmp,String maxTmp ){
         SharedPreferences.Editor editor= PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putBoolean("city_selected",true);
@@ -215,6 +264,35 @@ public class Utility {
         editor.putString("publish",publish);
         editor.putString("current_date",currentDate);
         editor.commit();
+    }
+
+    public synchronized static boolean handleGeocoderResponse(Context context,String response){
+        if (TextUtils.isEmpty(response)){
+            return false;
+        }
+        try{
+            JSONObject jsonObject=new JSONObject(response);
+            int jsonStatus=jsonObject.getInt("status");
+            if (0==jsonStatus){
+                JSONObject subObject=jsonObject.getJSONObject("result");
+                String currentLocation=subObject.getString("formatted_address");
+                JSONObject addressComponentObject=subObject.getJSONObject("addressComponent");
+                String district=addressComponentObject.getString("district");
+                String cityname=addressComponentObject.getString("city");
+                String provinceName=addressComponentObject.getString("province");
+
+                SharedPreferences.Editor editor=PreferenceManager.getDefaultSharedPreferences(context).edit();
+                editor.putString("current_location",currentLocation);
+                editor.putString("current_district",district);
+                editor.putString("current_city",cityname);
+                editor.putString("current_province",provinceName);
+                editor.commit();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
 }
