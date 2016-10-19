@@ -29,11 +29,13 @@ public class SevenDaysWeatherForcastActivity extends Activity implements View.On
     private List<SevenDaysWeather> sevenDaysWeathers=new ArrayList<SevenDaysWeather>();
     private String cityName="";
     private String publishTime="";
+    private boolean isFromChooseArea=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.seven_days_weather_forecast_layout);
+        isFromChooseArea=getIntent().getBooleanExtra("is_from_choose_area",false);
         if (getSevenDaysWeather()){
             TextView textView=(TextView)findViewById(R.id.seven_days_location);
             textView.setText(cityName);
@@ -66,7 +68,12 @@ public class SevenDaysWeatherForcastActivity extends Activity implements View.On
 
     private boolean getSevenDaysWeather(){
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-        String response=prefs.getString("current_city_weather_response","");
+        String response="";
+        if (isFromChooseArea){
+            response=prefs.getString("other_city_weather_response","");
+        }else {
+            response=prefs.getString("current_city_weather_response","");
+        }
         if (TextUtils.isEmpty(response)){
             return false;
         }

@@ -78,7 +78,8 @@ public class ChooseAreaActivity extends Activity{
                     if (isMunicipality()){
                         selectedCity=cityList.get(position);
                         //如果是直辖市，不进行第三级查找，直接查询天气
-                        Intent intent=new Intent(ChooseAreaActivity.this,CityWeatherActivity.class);
+                        Intent intent=new Intent(ChooseAreaActivity.this,CurrentCityWeatherActivity.class);
+                        intent.putExtra("is_from_choose_area",true);
                         intent.putExtra("county_code",selectedCity.getCityCode());
                         intent.putExtra("county_name",selectedCity.getCityName());
                         startActivity(intent);
@@ -89,7 +90,8 @@ public class ChooseAreaActivity extends Activity{
                     }
                 }else if (currentLevel==LEVEL_COUNTY){
                     selectedCounty=countyList.get(position);
-                    Intent intent=new Intent(ChooseAreaActivity.this,CityWeatherActivity.class);
+                    Intent intent=new Intent(ChooseAreaActivity.this,CurrentCityWeatherActivity.class);
+                    intent.putExtra("is_from_choose_area",true);
                     intent.putExtra("county_code",selectedCounty.getCountyCode());
                     intent.putExtra("county_name",selectedCounty.getCountyName());
                     startActivity(intent);

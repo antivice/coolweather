@@ -73,6 +73,8 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
     private Button chooseCity;
     private Button refreshCurrentCityWeather;
 
+    private boolean isFromChooseArea=false;
+
     private List<HourlyWeather> hourlyWeathers=new ArrayList<HourlyWeather>();
 
     private String currentCityName="";
@@ -144,6 +146,14 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
         chooseCity.setOnClickListener(this);
         refreshCurrentCityWeather.setOnClickListener(this);
 
+        isFromChooseArea=getIntent().getBooleanExtra("is_from_choose_area",false);
+        if (isFromChooseArea){
+            currentCityName=getIntent().getStringExtra("county_name");
+            currentCityCode=getIntent().getStringExtra("county_code");
+            getCurrentCityWeatherByCityCode(currentCityCode);
+            return;
+        }
+
         locationManager=(LocationManager)getSystemService(Context.LOCATION_SERVICE);
         List<String> providerList=locationManager.getProviders(true);
         if (providerList.contains(LocationManager.GPS_PROVIDER)){
@@ -176,6 +186,7 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
         switch (v.getId()){
             case R.id.choose_city:
                 Intent intent=new Intent(this,SevenDaysWeatherForcastActivity.class);
+                intent.putExtra("is_from_choose_area",isFromChooseArea);
                 startActivity(intent);
                 break;
             case R.id.refresh_current_city_weather:
@@ -379,7 +390,11 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
                 currentCityWeatherInfoLayout.setVisibility(View.VISIBLE);
 
                 SharedPreferences.Editor editor= PreferenceManager.getDefaultSharedPreferences(CurrentCityWeatherActivity.this).edit();
-                editor.putString("current_city_weather_response",httpResponse);
+                if (isFromChooseArea){
+                    editor.putString("other_city_weather_response",httpResponse);
+                }else {
+                    editor.putString("current_city_weather_response",httpResponse);
+                }
                 editor.commit();
             }
         }catch (Exception e){
@@ -444,8 +459,10 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
             String wind="风力："+windScale+"级"+windDirection+"\n风速："+windSpeed+"Km/h";
 
             SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-            currentCityName=prefs.getString("current_district","");
-            currentCityLocation.setText(prefs.getString("current_location",""));
+            if (!isFromChooseArea){
+                currentCityName=prefs.getString("current_district","");
+                currentCityLocation.setText(prefs.getString("current_location",""));
+            }
             currentCityNameText.setText(currentCityName);
             currentCityUpdateText.setText("发布时间："+updateTime);
             currentCityWeatherText.setText("天气："+weatherDesp);
