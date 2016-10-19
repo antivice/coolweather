@@ -15,7 +15,7 @@
             android:layout_height="50dp"
             android:text="go"/>
         <TextView
-            android:id="@+id/current_city_name"
+            android:id="@+id/current_city_location"
             android:layout_centerInParent="true"
             android:text="当前位置"
             android:textSize="18sp"
@@ -32,78 +32,145 @@
             android:layout_centerVertical="true"
             android:background="@mipmap/refresh"/>
     </RelativeLayout>
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="#27A5F9">
-        <TextView
-            android:id="@+id/current_city_publish_date"
-            android:layout_alignParentRight="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
-            android:layout_marginTop="10dp"
-            android:textColor="#fff"
-            android:textSize="18sp"
-            android:text="test"/>
+
+
+        <!-- 天气简要信息 -->
 
         <LinearLayout
             android:id="@+id/current_city_weather_info_layout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/current_city_date"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:gravity="center"
-                android:textColor="#fff"
-                android:textSize="18sp"
-                android:text="Test"/>
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/current_weather_desp"
-                android:layout_width="wrap_content"
-                android:layout_height="60dp"
-                android:layout_gravity="center_horizontal"
-                android:gravity="center"
-                android:textColor="#FFF"
-                android:textSize="40sp" />
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="60dp"
-                android:layout_gravity="center_horizontal"
-                android:orientation="horizontal" >
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:orientation="vertical">
+
+                <!-- 城市名 -->
+                <TextView
+                    android:id="@+id/current_city_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textSize="30sp"
+                    android:textColor="@color/colorText"
+                    android:textStyle="bold" />
+
+                <!-- 白天夜晚天气 -->
 
                 <TextView
-                    android:id="@+id/current_tmp_min"
+                    android:id="@+id/current_city_daynight_weather"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:textColor="#FFF"
-                    android:textSize="40sp" />
+                    android:layout_height="0dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:textColor="@color/colorText"
+                    android:gravity="center" />
+
+                <!-- 温度 -->
 
                 <TextView
+                    android:id="@+id/current_city_temp"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:text="~"
-                    android:textColor="#FFF"
-                    android:textSize="40sp" />
+                    android:layout_height="0dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:textColor="@color/colorText"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- 各种信息 -->
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:orientation="vertical">
+
+                <!-- 日出日落 -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:textColor="@color/colorText"
+                    android:orientation="horizontal">
+
+                    <!--日出时间-->
+
+                    <TextView
+                        android:id="@+id/current_city_sunriseTime"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:textColor="@color/colorText"
+                        android:gravity="center" />
+
+                    <!--日落时间-->
+
+                    <TextView
+                        android:id="@+id/current_city_sunsetTime"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:textColor="@color/colorText"
+                        android:gravity="center" />
+                </LinearLayout>
+
+                <!--风力 降水概率-->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <!--风力-->
+
+                    <TextView
+                        android:id="@+id/current_city_wind"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:textColor="@color/colorText"
+                        android:gravity="center" />
+
+                    <!--降水概率,后改为显示pm2.5-->
+
+                    <TextView
+                        android:id="@+id/current_city_pop"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:textColor="@color/colorText"
+                        android:gravity="center" />
+                </LinearLayout>
+
+                <!-- 发布时间 -->
 
                 <TextView
-                    android:id="@+id/current_tmp_max"
+                    android:id="@+id/current_city_updateTime"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:textColor="#FFF"
-                    android:textSize="40sp" />
+                    android:layout_height="0dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:textColor="@color/colorText"
+                    android:gravity="center" />
             </LinearLayout>
         </LinearLayout>
-    </RelativeLayout>
+    </LinearLayout>
 
 </LinearLayout>

@@ -32,6 +32,7 @@ import com.example.bmw.coolweather.util.HttpCallbackListener;
 import com.example.bmw.coolweather.util.HttpUtil;
 import com.example.bmw.coolweather.util.Utility;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -52,12 +53,17 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
     public static final int REQUEST_CODE_FOR_LOCATION=1200;
 
     private LinearLayout currentCityWeatherInfoLayout;
-    private TextView cuurrentCityNameText;
-    private TextView currentPublishText;
-    private TextView currentCityDateText;
-    private TextView currentCityWeatherDespText;
-    private TextView currentCityTmpMin;
-    private TextView currentCityTmpMax;
+    private TextView currentCityLocation;
+    private TextView currentCityNameText;
+    private TextView currentCityUpdateText;
+    //private TextView currentCityStatus;
+    private TextView currentCityWeatherText;
+    private TextView currentCityTempature;
+    private TextView currentCityWind;
+    private TextView currentCityPop;
+    private TextView currentCitySunriseTime;
+    private TextView currentCitySunsetTime;
+
     private Button chooseCity;
     private Button refreshCurrentCityWeather;
 
@@ -111,18 +117,22 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
         checkAndRequestPermission(this, Manifest.permission.INTERNET,REQUEST_CODE_FOR_INTENET);
         checkAndRequestPermission(this, Manifest.permission.ACCESS_FINE_LOCATION,REQUEST_CODE_FOR_LOCATION);
 
+
         chooseCity=(Button)findViewById(R.id.choose_city);
         refreshCurrentCityWeather=(Button)findViewById( R.id.refresh_current_city_weather);
-        cuurrentCityNameText=(TextView)findViewById(R.id.current_city_name);
-        currentPublishText=(TextView)findViewById(R.id.current_city_publish_date);
-        currentCityWeatherDespText=(TextView)findViewById(R.id.current_weather_desp);
-        currentCityDateText=(TextView)findViewById(R.id.current_city_date);
-        currentCityTmpMax=(TextView)findViewById(R.id.current_tmp_max);
-        currentCityTmpMin=(TextView)findViewById(R.id.current_tmp_min);
+        currentCityLocation=(TextView)findViewById(R.id.current_city_location);
+        currentCityNameText=(TextView)findViewById(R.id.current_city_name);
+        currentCityUpdateText=(TextView)findViewById(R.id.current_city_updateTime);
+        //currentCityStatus=(TextView)findViewById(R.id.current_city_status);
+        currentCityWeatherText=(TextView)findViewById(R.id.current_city_daynight_weather);
+        currentCityTempature=(TextView)findViewById(R.id.current_city_temp);
+        currentCityWind=(TextView)findViewById(R.id.current_city_wind);
+        currentCityPop=(TextView)findViewById(R.id.current_city_pop);
+        currentCitySunriseTime=(TextView)findViewById(R.id.current_city_sunriseTime);
+        currentCitySunsetTime=(TextView)findViewById(R.id.current_city_sunsetTime);
         currentCityWeatherInfoLayout=(LinearLayout) findViewById(R.id.current_city_weather_info_layout);
 
         currentCityWeatherInfoLayout.setVisibility(View.INVISIBLE);
-        cuurrentCityNameText.setVisibility(View.INVISIBLE);
 
         chooseCity.setOnClickListener(this);
         refreshCurrentCityWeather.setOnClickListener(this);
@@ -163,7 +173,7 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
                 break;
             case R.id.refresh_current_city_weather:
                 if (null!=currentLocation){
-                    currentPublishText.setText("同步中");
+                    //currentCityStatus.setVisibility(View.VISIBLE);
                     getCurrentLocationWeather(currentLocation);
                 }
                 break;
@@ -184,6 +194,7 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
             @Override
             public void onFinish(String response) {
                 if (Utility.handleGeocoderResponse(CurrentCityWeatherActivity.this,response)){
+                    Log.i("weather","getCurrentLocationWeather executed");
                     getCurrentCityCode(CurrentCityWeatherActivity.this);
                 }
             }
@@ -194,23 +205,41 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
             }
         });
     }
-
+/*目前实现方法是：
+* 1、获取当前的经纬度
+* 2、根据经纬度在http://api.map.baidu.com/geocoder/v2/?上进行逆地理解析，获取当前的城市名
+* 3、根据城市名在http://apis.baidu.com/apistore/weatherservice/citylist?cityname=获取城市ID
+* 4、根据城市ID在https://api.heweather.com/x3/weather上查询天气
+* 存在以下问题：
+* 第二步返回的城市名例如“北京市”，“朝阳区”，第三步中应将“市”、“区”、“县”这样的字眼去掉
+* 第三步中根据城市名获取城市ID存在重名问题，比如“北京朝阳区”和“辽宁朝阳市”
+* 第二步返回的城市名例如“围场满族蒙古族自治县”，第三步中“围场”可以查询成功，用“围场满族蒙古族自治县”查询则失败，这个问题尚未解决*/
     private void getCurrentCityCode(Context context){
         final SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(context);
-        //final String currentDistrict=prefs.getString("current_district","");
-        final String currentDistrict=prefs.getString("current_city","");
+        final String currentDistrict=prefs.getString("current_district","");
+        //final String currentDistrict=prefs.getString("current_city","");
         final int length=currentDistrict.length();
         if (!TextUtils.isEmpty(currentDistrict)){
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.i("weather","getCurrentCityCode executed");
                     HttpURLConnection connection=null;
+                    String currentAddress="";
                     try{
                         StringBuilder urlString=new StringBuilder();
-                        urlString.append("http://apis.baidu.com/apistore/weatherservice/cityinfo?cityname=");
+                        //urlString.append("http://apis.baidu.com/apistore/weatherservice/cityinfo?cityname=");
+                        urlString.append("http://apis.baidu.com/apistore/weatherservice/citylist?cityname=");
                         //urlString.append("http://apis.baidu.com/apistore/weatherservice/cityinfo?cityname=%E5%8C%97%E4%BA%AC");
-                        urlString.append(java.net.URLEncoder.encode(currentDistrict.substring(0,length-1)));
-                        //urlString.append(java.net.URLEncoder.encode("北京"));
+                        if (length==2 || currentDistrict.contains("自治")){
+                            //如果县名只有两个字或者是自治县，需要全部保留，比如“叶县”、“围场满族蒙古族自治县”
+                            currentAddress=currentDistrict;
+                        }else {
+                            //如果不满足以上两条，将最后一个字去掉
+                            currentAddress=currentDistrict.substring(0,length-1);
+                        }
+                        urlString.append(java.net.URLEncoder.encode(currentAddress));
+                        //urlString.append(java.net.URLEncoder.encode("围场"));
 
                         URL url=new URL(urlString.toString());
                         connection=(HttpURLConnection)url.openConnection();
@@ -229,10 +258,13 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
                         JSONObject jsonObject=new JSONObject(response.toString());
                         int errNum=jsonObject.getInt("errNum");
                         if (0==errNum){
-                            JSONObject subObject=jsonObject.getJSONObject("retData");
-                            String cityCode=subObject.getString("cityCode");
-                            String zipCode=subObject.getString("zipCode");
-                            String telAreaCode=subObject.getString("telAreaCode");
+                            JSONArray jsonArray=jsonObject.getJSONArray("retData");
+                            JSONObject subObject=jsonArray.getJSONObject(0);
+                            String cityCode=subObject.getString("area_id");
+                            String provinceName=subObject.getString("province_cn");
+                            String cityName=subObject.getString("district_cn");
+                            //String zipCode=subObject.getString("zipCode");
+                            //String telAreaCode=subObject.getString("telAreaCode");
                             getCurrentCityWeatherByCityCode(cityCode);
                         }
                     }catch (Exception e){
@@ -252,15 +284,14 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
         String address="https://api.heweather.com/x3/weather?cityid=CN"+cityCode+"&key=61db33bb544c4cdaaee7c69fc8e709bb";
         HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
             @Override
-            public void onFinish(String response) {
+            public void onFinish(final String response) {
+                Log.i("weather","getCurrentCityWeatherByCityCode executed");
                 if (Utility.handleCurrentLocationWeatherResponse(CurrentCityWeatherActivity.this,response)){
-                    //Message msg=new Message();
-                    //msg.what=GET_CURRENT_CITY_WEATHER_SUCCESS;
-                    //handler.sendMessage(msg);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showWeather();
+                            //showWeather();
+                            parseAndShowWeather(response);
                         }
                     });
                 }
@@ -316,13 +347,64 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
 
     private void showWeather(){
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-        cuurrentCityNameText.setText(prefs.getString("current_location",""));
-        currentCityWeatherDespText.setText(prefs.getString("current_city_weather_desp",""));
-        currentCityTmpMax.setText(prefs.getString("current_city_max_tmp",""));
-        currentCityTmpMin.setText(prefs.getString("current_city_min_tmp",""));
-        currentPublishText.setText(prefs.getString("current_city_publish","")+"发布");
-        currentCityDateText.setText(prefs.getString("current_city_date",""));
+        currentCityNameText.setText(prefs.getString("current_location",""));
+        //currentCityStatus.setVisibility(View.INVISIBLE);
         currentCityWeatherInfoLayout.setVisibility(View.VISIBLE);
-        cuurrentCityNameText.setVisibility(View.VISIBLE);
+        currentCityLocation.setVisibility(View.VISIBLE);
+    }
+
+    private void parseAndShowWeather(String httpResponse){
+
+        try {
+            JSONObject jsonObject=new JSONObject(httpResponse);
+            JSONArray jsonArray=jsonObject.getJSONArray("HeWeather data service 3.0");
+            JSONObject subJsonObject=jsonArray.getJSONObject(0);
+            String status=subJsonObject.getString("status");
+            if ("ok".equals(status)){
+                //解析出当天天气
+                JSONArray dailyForecastSubJsonArray=subJsonObject.getJSONArray("daily_forecast");
+
+                //此处目前只解析第一天的天气预报，可使用 for (int i=0;i<dailyForecastSubJsonArray.length();i++)解析未来七天的天气预报
+                JSONObject currentWeatherJsonObject=dailyForecastSubJsonArray.getJSONObject(0);
+                String minTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("min");
+                String maxTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("max");
+                String condFirst=currentWeatherJsonObject.getJSONObject("cond").getString("txt_d");
+                String condSecond=currentWeatherJsonObject.getJSONObject("cond").getString("txt_n");
+                String sunRiseTime=currentWeatherJsonObject.getJSONObject("astro").getString("sr");
+                String sunSetTime=currentWeatherJsonObject.getJSONObject("astro").getString("ss");
+                String windSpeed=subJsonObject.getJSONObject("now").getJSONObject("wind").getString("spd");
+                String windDirection=subJsonObject.getJSONObject("now").getJSONObject("wind").getString("dir");
+                String windScale=subJsonObject.getJSONObject("now").getJSONObject("wind").getString("sc");
+                String pm25=subJsonObject.getJSONObject("aqi").getJSONObject("city").getString("pm25");
+                String airQuality=subJsonObject.getJSONObject("aqi").getJSONObject("city").getString("qlty");
+                String date=currentWeatherJsonObject.getString("date");
+
+                JSONObject basicJsonObject=subJsonObject.getJSONObject("basic");
+                String updateTime=basicJsonObject.getJSONObject("update").getString("loc");
+                String weatherDesp="";
+                if (condFirst.equals(condSecond)){
+                    weatherDesp=condFirst;
+                }else {
+                    weatherDesp=condFirst+"转"+condSecond;
+                }
+                String tempature=minTmp+"℃~"+maxTmp+"℃";
+                String wind="风力："+windScale+"级"+windDirection+"  风速："+windSpeed+"Kmph";
+
+                SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
+                currentCityLocation.setText(prefs.getString("current_location",""));
+                currentCityNameText.setText(prefs.getString("current_district",""));
+                currentCityUpdateText.setText("发布时间："+updateTime);
+                currentCityWeatherText.setText("天气："+weatherDesp);
+                currentCityTempature.setText("温度："+tempature);
+                currentCityWind.setText(wind);
+                currentCityPop.setText("PM2.5:"+pm25+"\n"+airQuality);
+                currentCitySunriseTime.setText("日出："+sunRiseTime);
+                currentCitySunsetTime.setText("日落："+sunSetTime);
+                //currentCityStatus.setVisibility(View.INVISIBLE);
+                currentCityWeatherInfoLayout.setVisibility(View.VISIBLE);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
