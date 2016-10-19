@@ -17,7 +17,7 @@
         <TextView
             android:id="@+id/current_city_location"
             android:layout_centerInParent="true"
-            android:text="当前位置"
+            android:text="更新中..."
             android:textSize="18sp"
             android:textColor="#fff"
             android:layout_width="wrap_content"
@@ -32,10 +32,11 @@
             android:layout_centerVertical="true"
             android:background="@mipmap/refresh"/>
     </RelativeLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
+        android:orientation="vertical"
         android:background="#27A5F9">
 
 
@@ -44,7 +45,7 @@
         <LinearLayout
             android:id="@+id/current_city_weather_info_layout"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="220dp"
             android:orientation="horizontal">
 
             <LinearLayout
@@ -171,6 +172,72 @@
                     android:gravity="center" />
             </LinearLayout>
         </LinearLayout>
+
+        <ListView
+            android:id="@+id/current_city_hourly_forecast"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="6"></ListView>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="5">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+                <!-- 舒适指数 -->
+                <TextView
+                    android:id="@+id/current_city_comfortable"
+                    android:layout_width="match_parent"
+                    android:textColor="@color/colorText"
+                    android:layout_height="100dp"></TextView>
+
+                <!-- 洗车指数 -->
+                <TextView
+                    android:id="@+id/current_city_warshcar"
+                    android:layout_width="match_parent"
+                    android:textColor="@color/colorText"
+                    android:layout_height="100dp"></TextView>
+
+                <!-- 穿衣指数-->
+                <TextView
+                    android:id="@+id/current_city_clothes"
+                    android:layout_width="match_parent"
+                    android:textColor="@color/colorText"
+                    android:layout_height="100dp"></TextView>
+
+                <!-- 感冒指数-->
+                <TextView
+                    android:id="@+id/current_city_fluent"
+                    android:layout_width="match_parent"
+                    android:textColor="@color/colorText"
+                    android:layout_height="100dp"></TextView>
+
+                <!-- 旅行指数-->
+                <TextView
+                    android:id="@+id/current_city_travel"
+                    android:layout_width="match_parent"
+                    android:textColor="@color/colorText"
+                    android:layout_height="100dp"></TextView>
+
+                <!-- 运动指数-->
+                <TextView
+                    android:id="@+id/current_city_sport"
+                    android:layout_width="match_parent"
+                    android:textColor="@color/colorText"
+                    android:layout_height="100dp"></TextView>
+
+                <!-- 防晒指数-->
+                <TextView
+                    android:id="@+id/current_city_ultraviolet_rays"
+                    android:layout_width="match_parent"
+                    android:textColor="@color/colorText"
+                    android:layout_height="100dp"></TextView>
+            </LinearLayout>
+        </ScrollView>
+
     </LinearLayout>
 
 </LinearLayout>

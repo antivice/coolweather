@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -17,16 +18,21 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.ListViewAutoScrollHelper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.bmw.coolweather.Adapter.HourlyForecastAdapter;
 import com.example.bmw.coolweather.R;
 import com.example.bmw.coolweather.model.City;
+import com.example.bmw.coolweather.model.HourlyWeather;
+import com.example.bmw.coolweather.model.SevenDaysWeather;
 import com.example.bmw.coolweather.service.AutoUpdateService;
 import com.example.bmw.coolweather.util.HttpCallbackListener;
 import com.example.bmw.coolweather.util.HttpUtil;
@@ -40,6 +46,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,7 +63,6 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
     private TextView currentCityLocation;
     private TextView currentCityNameText;
     private TextView currentCityUpdateText;
-    //private TextView currentCityStatus;
     private TextView currentCityWeatherText;
     private TextView currentCityTempature;
     private TextView currentCityWind;
@@ -66,6 +72,8 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
 
     private Button chooseCity;
     private Button refreshCurrentCityWeather;
+
+    private List<HourlyWeather> hourlyWeathers=new ArrayList<HourlyWeather>();
 
     private String currentCityName="";
     private String currentCityCode="";
@@ -123,7 +131,6 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
         currentCityLocation=(TextView)findViewById(R.id.current_city_location);
         currentCityNameText=(TextView)findViewById(R.id.current_city_name);
         currentCityUpdateText=(TextView)findViewById(R.id.current_city_updateTime);
-        //currentCityStatus=(TextView)findViewById(R.id.current_city_status);
         currentCityWeatherText=(TextView)findViewById(R.id.current_city_daynight_weather);
         currentCityTempature=(TextView)findViewById(R.id.current_city_temp);
         currentCityWind=(TextView)findViewById(R.id.current_city_wind);
@@ -168,12 +175,12 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
     public void onClick(View v){
         switch (v.getId()){
             case R.id.choose_city:
-                Intent intent=new Intent(this,ChooseAreaActivity.class);
+                Intent intent=new Intent(this,SevenDaysWeatherForcastActivity.class);
                 startActivity(intent);
                 break;
             case R.id.refresh_current_city_weather:
                 if (null!=currentLocation){
-                    //currentCityStatus.setVisibility(View.VISIBLE);
+                    currentCityLocation.setText("更新中...");
                     getCurrentLocationWeather(currentLocation);
                 }
                 break;
@@ -353,56 +360,151 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
         currentCityLocation.setVisibility(View.VISIBLE);
     }
 
+    //待实现功能，解析alarms灾害预警，显示在通知栏
     private void parseAndShowWeather(String httpResponse){
-
         try {
             JSONObject jsonObject=new JSONObject(httpResponse);
             JSONArray jsonArray=jsonObject.getJSONArray("HeWeather data service 3.0");
             JSONObject subJsonObject=jsonArray.getJSONObject(0);
             String status=subJsonObject.getString("status");
             if ("ok".equals(status)){
-                //解析出当天天气
-                JSONArray dailyForecastSubJsonArray=subJsonObject.getJSONArray("daily_forecast");
+                parseCurrentCityWeather(subJsonObject);
+                parseHourlyWeather(subJsonObject);
+                parseCurrentCitySuggestions(subJsonObject);
 
-                //此处目前只解析第一天的天气预报，可使用 for (int i=0;i<dailyForecastSubJsonArray.length();i++)解析未来七天的天气预报
-                JSONObject currentWeatherJsonObject=dailyForecastSubJsonArray.getJSONObject(0);
-                String minTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("min");
-                String maxTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("max");
-                String condFirst=currentWeatherJsonObject.getJSONObject("cond").getString("txt_d");
-                String condSecond=currentWeatherJsonObject.getJSONObject("cond").getString("txt_n");
-                String sunRiseTime=currentWeatherJsonObject.getJSONObject("astro").getString("sr");
-                String sunSetTime=currentWeatherJsonObject.getJSONObject("astro").getString("ss");
-                String windSpeed=subJsonObject.getJSONObject("now").getJSONObject("wind").getString("spd");
-                String windDirection=subJsonObject.getJSONObject("now").getJSONObject("wind").getString("dir");
-                String windScale=subJsonObject.getJSONObject("now").getJSONObject("wind").getString("sc");
-                String pm25=subJsonObject.getJSONObject("aqi").getJSONObject("city").getString("pm25");
-                String airQuality=subJsonObject.getJSONObject("aqi").getJSONObject("city").getString("qlty");
-                String date=currentWeatherJsonObject.getString("date");
+                HourlyForecastAdapter adapter=new HourlyForecastAdapter(CurrentCityWeatherActivity.this,R.layout.hourly_weather_layout,hourlyWeathers);
+                ListView listView=(ListView)findViewById(R.id.current_city_hourly_forecast);
+                listView.setAdapter(adapter);
 
-                JSONObject basicJsonObject=subJsonObject.getJSONObject("basic");
-                String updateTime=basicJsonObject.getJSONObject("update").getString("loc");
-                String weatherDesp="";
-                if (condFirst.equals(condSecond)){
-                    weatherDesp=condFirst;
-                }else {
-                    weatherDesp=condFirst+"转"+condSecond;
-                }
-                String tempature=minTmp+"℃~"+maxTmp+"℃";
-                String wind="风力："+windScale+"级"+windDirection+"  风速："+windSpeed+"Kmph";
-
-                SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-                currentCityLocation.setText(prefs.getString("current_location",""));
-                currentCityNameText.setText(prefs.getString("current_district",""));
-                currentCityUpdateText.setText("发布时间："+updateTime);
-                currentCityWeatherText.setText("天气："+weatherDesp);
-                currentCityTempature.setText("温度："+tempature);
-                currentCityWind.setText(wind);
-                currentCityPop.setText("PM2.5:"+pm25+"\n"+airQuality);
-                currentCitySunriseTime.setText("日出："+sunRiseTime);
-                currentCitySunsetTime.setText("日落："+sunSetTime);
-                //currentCityStatus.setVisibility(View.INVISIBLE);
                 currentCityWeatherInfoLayout.setVisibility(View.VISIBLE);
+
+                SharedPreferences.Editor editor= PreferenceManager.getDefaultSharedPreferences(CurrentCityWeatherActivity.this).edit();
+                editor.putString("current_city_weather_response",httpResponse);
+                editor.commit();
             }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void parseHourlyWeather(JSONObject subJsonObject){
+        try{
+            //解析小时天气预报
+            hourlyWeathers.clear();
+            JSONArray hourlyWeatherForecastJsonArray=subJsonObject.getJSONArray("hourly_forecast");
+            for(int i=0;i<hourlyWeatherForecastJsonArray.length();i++){
+                HourlyWeather hourlyWeather=new HourlyWeather();
+                String hourlyTime=hourlyWeatherForecastJsonArray.getJSONObject(i).getString("date");//时间
+                String hourlyTemp=hourlyWeatherForecastJsonArray.getJSONObject(i).getString("tmp");//温度
+                String hourlyRainpop=hourlyWeatherForecastJsonArray.getJSONObject(i).getString("pop");//降水概率
+                String hourlyPressure=hourlyWeatherForecastJsonArray.getJSONObject(i).getString("pres");//气压
+                String hourlyWindSpeed=hourlyWeatherForecastJsonArray.getJSONObject(i).getJSONObject("wind").getString("spd");//风速(Kmph)
+                String hourlyWindDirection=hourlyWeatherForecastJsonArray.getJSONObject(i).getJSONObject("wind").getString("dir");//风向(方向)
+                String hourlyWindScale=hourlyWeatherForecastJsonArray.getJSONObject(i).getJSONObject("wind").getString("sc");//风力等级
+
+                hourlyWeather.setTime(hourlyTime.split(" ")[1]);
+                hourlyWeather.setRainPop("降水概率:"+hourlyRainpop);
+                hourlyWeather.setTempature("温度:"+hourlyTemp+"℃");
+                hourlyWeather.setWindCondition("风力:"+hourlyWindScale+" "+hourlyWindDirection+"  风速:"+hourlyWindSpeed+"Km/h");
+                hourlyWeather.setPressure("气压:"+Double.toString(Double.valueOf(hourlyPressure)/10)+"kpa");
+                hourlyWeathers.add(hourlyWeather);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void parseCurrentCityWeather(JSONObject subJsonObject){
+        try{
+            //解析出当天天气，此处目前只解析第一天的天气预报，可使用 for (int i=0;i<dailyForecastSubJsonArray.length();i++)解析未来七天的天气预报
+            JSONArray dailyForecastSubJsonArray=subJsonObject.getJSONArray("daily_forecast");
+            JSONObject currentWeatherJsonObject=dailyForecastSubJsonArray.getJSONObject(0);
+            String minTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("min");
+            String maxTmp=currentWeatherJsonObject.getJSONObject("tmp").getString("max");
+            String condFirst=currentWeatherJsonObject.getJSONObject("cond").getString("txt_d");
+            String condSecond=currentWeatherJsonObject.getJSONObject("cond").getString("txt_n");
+            String sunRiseTime=currentWeatherJsonObject.getJSONObject("astro").getString("sr");
+            String sunSetTime=currentWeatherJsonObject.getJSONObject("astro").getString("ss");
+            String windSpeed=subJsonObject.getJSONObject("now").getJSONObject("wind").getString("spd");
+            String windDirection=subJsonObject.getJSONObject("now").getJSONObject("wind").getString("dir");
+            String windScale=subJsonObject.getJSONObject("now").getJSONObject("wind").getString("sc");
+            String pm25=subJsonObject.getJSONObject("aqi").getJSONObject("city").getString("pm25");
+            String airQuality=subJsonObject.getJSONObject("aqi").getJSONObject("city").getString("qlty");
+            String date=currentWeatherJsonObject.getString("date");
+
+            JSONObject basicJsonObject=subJsonObject.getJSONObject("basic");
+            String updateTime=basicJsonObject.getJSONObject("update").getString("loc");
+            String weatherDesp="";
+            if (condFirst.equals(condSecond)){
+                weatherDesp=condFirst;
+            }else {
+                weatherDesp=condFirst+"转"+condSecond;
+            }
+            String tempature=minTmp+"℃~"+maxTmp+"℃";
+            String wind="风力："+windScale+"级"+windDirection+"\n风速："+windSpeed+"Km/h";
+
+            SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
+            currentCityName=prefs.getString("current_district","");
+            currentCityLocation.setText(prefs.getString("current_location",""));
+            currentCityNameText.setText(currentCityName);
+            currentCityUpdateText.setText("发布时间："+updateTime);
+            currentCityWeatherText.setText("天气："+weatherDesp);
+            currentCityTempature.setText("温度："+tempature);
+            currentCityWind.setText(wind);
+            currentCityPop.setText("PM2.5:"+pm25+"\n"+airQuality);
+            if (airQuality.contains("污染")){
+                currentCityPop.setTextColor(Color.rgb(0xff,0,0));
+            }
+            currentCitySunriseTime.setText("日出："+sunRiseTime);
+            currentCitySunsetTime.setText("日落："+sunSetTime);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void parseCurrentCitySuggestions(JSONObject subJsonObject){
+        try{
+            //舒适指数
+            String comfortableBrf=subJsonObject.getJSONObject("suggestion").getJSONObject("comf").getString("brf");
+            String comfortableTxt=subJsonObject.getJSONObject("suggestion").getJSONObject("comf").getString("txt");
+            TextView comfortableTextView=(TextView)findViewById(R.id.current_city_comfortable);
+            comfortableTextView.setText("舒适指数:"+comfortableBrf+"    "+comfortableTxt);
+
+            //洗车指数
+            String washcarBrf=subJsonObject.getJSONObject("suggestion").getJSONObject("cw").getString("brf");
+            String washcarTxt=subJsonObject.getJSONObject("suggestion").getJSONObject("cw").getString("txt");
+            TextView washcarTextView=(TextView)findViewById(R.id.current_city_warshcar);
+            washcarTextView.setText("洗车指数:"+washcarBrf+"    "+washcarTxt);
+
+            //穿衣指数
+            String clothesBrf=subJsonObject.getJSONObject("suggestion").getJSONObject("drsg").getString("brf");
+            String clothesTxt=subJsonObject.getJSONObject("suggestion").getJSONObject("drsg").getString("txt");
+            TextView clothesTextView=(TextView)findViewById(R.id.current_city_clothes);
+            clothesTextView.setText("穿衣指数:"+clothesBrf+"    "+clothesTxt);
+
+            //感冒指数
+            String fluentBrf=subJsonObject.getJSONObject("suggestion").getJSONObject("flu").getString("brf");
+            String fluentTxt=subJsonObject.getJSONObject("suggestion").getJSONObject("flu").getString("txt");
+            TextView fluentTextView=(TextView)findViewById(R.id.current_city_fluent);
+            fluentTextView.setText("感冒指数:"+fluentBrf+"    "+fluentTxt);
+
+            //运动指数
+            String sportBrf=subJsonObject.getJSONObject("suggestion").getJSONObject("sport").getString("brf");
+            String sportTxt=subJsonObject.getJSONObject("suggestion").getJSONObject("sport").getString("txt");
+            TextView sportTextView=(TextView)findViewById(R.id.current_city_sport);
+            sportTextView.setText("运动指数:"+sportBrf+"    "+sportTxt);
+
+            //旅行指数
+            String travelBrf=subJsonObject.getJSONObject("suggestion").getJSONObject("trav").getString("brf");
+            String travelTxt=subJsonObject.getJSONObject("suggestion").getJSONObject("trav").getString("txt");
+            TextView travelTextView=(TextView)findViewById(R.id.current_city_travel);
+            travelTextView.setText("旅行指数:"+travelBrf+"    "+travelTxt);
+
+            //防晒指数
+            String ultraviolet_raysBrf=subJsonObject.getJSONObject("suggestion").getJSONObject("uv").getString("brf");
+            String ultraviolet_raysTxt=subJsonObject.getJSONObject("suggestion").getJSONObject("uv").getString("txt");
+            TextView ultraviolet_raysTextView=(TextView)findViewById(R.id.current_city_ultraviolet_rays);
+            ultraviolet_raysTextView.setText("防晒指数:"+ultraviolet_raysBrf+"    "+ultraviolet_raysTxt);
         }catch (Exception e){
             e.printStackTrace();
         }

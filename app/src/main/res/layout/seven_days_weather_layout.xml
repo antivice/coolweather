@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        android:orientation="vertical">
+
+        <!-- 日期 -->
+        <TextView
+            android:id="@+id/seven_days_date"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:textColor="@color/colorText" />
+
+        <!-- 白天夜晚天气 -->
+
+        <TextView
+            android:id="@+id/seven_days_daynight_weather"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:textColor="@color/colorText"
+            android:gravity="center" />
+
+        <!-- 温度 -->
+
+        <TextView
+            android:id="@+id/seven_days_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:textColor="@color/colorText"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <!-- 各种信息 -->
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_weight="3"
+        android:orientation="vertical">
+
+        <!-- 日出日落 -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:textColor="@color/colorText"
+            android:orientation="horizontal">
+
+            <!--日出时间-->
+
+            <TextView
+                android:id="@+id/seven_days_sunriseTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:textColor="@color/colorText"
+                android:gravity="center" />
+
+            <!--日落时间-->
+
+            <TextView
+                android:id="@+id/seven_days_sunsetTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:textColor="@color/colorText"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!--风力 降水概率-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <!--风力-->
+
+            <TextView
+                android:id="@+id/seven_days_wind"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:textColor="@color/colorText"
+                android:gravity="center" />
+
+            <!--大气压力-->
+
+            <TextView
+                android:id="@+id/seven_days_pressure"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:textColor="@color/colorText"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- 发布时间 -->
+
+        <TextView
+            android:id="@+id/seven_days_updateTime"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:textColor="@color/colorText"
+            android:gravity="center" />
+    </LinearLayout>
+
+</LinearLayout>

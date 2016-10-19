@@ -20,6 +20,9 @@
         </activity>
         <activity android:name=".activity.ChooseAreaActivity"></activity>
         <activity android:name=".activity.CityWeatherActivity"></activity>
+        <activity android:name=".activity.SevenDaysWeatherForcastActivity"></activity>
+
+
         <service android:name=".service.AutoUpdateService"></service>
         <receiver android:name=".receiver.AutoUpdateReceiver"></receiver>
     </application>
