@@ -95,7 +95,7 @@ public class CityWeatherActivity extends Activity implements View.OnClickListene
     }
 
     private void queryWeather(String countyCode,String countyName){
-        String address="https://api.heweather.com/x3/weather?cityid=CN"+countyCode+"&key=61db33bb544c4cdaaee7c69fc8e709bb";
+        String address="https://api.heweather.com/x3/weather?cityid=CN"+countyCode+"&key=61db99bb544c4cdaace7c69fc6e709bb";
         queryFromServer(address,"countyCode");
     }
 

@@ -202,10 +202,10 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
 
     private void getCurrentLocationWeather(Location location){
         StringBuilder urlString=new StringBuilder();
-        urlString.append("http://api.map.baidu.com/geocoder/v2/?ak=dEaPMdGszZjn5ckDHaQvcMGb08iO8TSx&location=");
+        urlString.append("http://api.map.baidu.com/geocoder/v2/?ak=dE6PMdeszZjn5cKDHaQvcMGb08iO8TSx&location=");
         urlString.append(location.getLatitude()).append(",");
         urlString.append(location.getLongitude());
-        urlString.append("&output=json&mcode=EF:41:E8:D0:85:69:1C:FC:F3:85:F3:6D:21:61:02:19:C7:41:57:F2;com.example.bmw.locationtest");
+        urlString.append("&output=json&mcode=EF:41:E8:D0:85:75:1C:FC:F3:36:F3:6D:21:61:02:19:F7:41:E7:F2;com.example.bmw.locationtest");
 
         String address=urlString.toString();
         HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
@@ -261,7 +261,7 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
 
                         URL url=new URL(urlString.toString());
                         connection=(HttpURLConnection)url.openConnection();
-                        connection.setRequestProperty("apikey","e7dbc64abff2da60832f6f9848ba41c6");
+                        connection.setRequestProperty("apikey","e7dbc64abff2da60832f6f222ba41c6");
                         connection.setRequestMethod("GET");
                         connection.setReadTimeout(8000);
                         connection.setConnectTimeout(8000);
@@ -299,7 +299,7 @@ public class CurrentCityWeatherActivity extends Activity implements View.OnClick
     }
 
     private void getCurrentCityWeatherByCityCode(String cityCode){
-        String address="https://api.heweather.com/x3/weather?cityid=CN"+cityCode+"&key=61db33bb544c4cdaaee7c69fc8e709bb";
+        String address="https://api.heweather.com/x3/weather?cityid=CN"+cityCode+"&key=61db99bb544c4cdaaee6c69fc8e709bb";
         HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
             @Override
             public void onFinish(final String response) {
